@@ -2,22 +2,23 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>fffffffff</title>
+    <title>twitchStream</title>
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'">    <link rel="stylesheet" type="text/css" href="./style.css">
    	<script src="https://embed.twitch.tv/embed/v1.js"></script>
 </head>
 <body>
+  <div id="receiver">fff</div>
   <div id="twitch-embed"></div>
   <script type="text/javascript">
     var options = {
-      width: "3840",
-      height: "2160",
+      width: "1920",
+      height: "1080",
       channel: "monstercat",
       layout: "video",
       muted: true
     };
     setTimeout(() => {
-      var player = new Twitch.Embed("twitch-embed", options);
+      //var player = new Twitch.Embed("twitch-embed", options);
     }, 1000)
   </script>
   <button id="close-button">❌</button>

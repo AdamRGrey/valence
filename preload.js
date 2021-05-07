@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron')
+let receiver;
 
 window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
@@ -19,5 +20,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	})
 	el.addEventListener('mouseleave', () => {
 	  ipcRenderer.send('set-ignore-mouse-events', true, { forward: true })
-	})
-})
+	});
+  receiver = document.querySelector("#receiver");
+  receiver.textContent = "acquired";
+
+  ipcRenderer.on("img", (event, ...args) => {
+    receiver.textContent = event;
+  });
+});
