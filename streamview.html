@@ -7,7 +7,6 @@
    	<script src="https://embed.twitch.tv/embed/v1.js"></script>
 </head>
 <body>
-  <div id="receiver">fff</div>
   <div id="twitch-embed"></div>
   <script type="text/javascript">
     var options = {
@@ -18,9 +17,8 @@
       muted: true
     };
     setTimeout(() => {
-      //var player = new Twitch.Embed("twitch-embed", options);
-    }, 1000)
+      var player = new Twitch.Embed("twitch-embed", options);
+    }, 250)
   </script>
-  <button id="close-button">❌</button>
 </body>
 </html>

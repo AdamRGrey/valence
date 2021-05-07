@@ -3,7 +3,8 @@ const { ipcMain } = require('electron')
 const path = require('path')
 
 app.disableHardwareAcceleration();
-let win;
+let streamInWin;
+let theaterWin;
 
 function sessionCooperateWithTwitch(){
 
@@ -53,33 +54,48 @@ function sessionCooperateWithTwitch(){
 }
 function createWindow () {
   sessionCooperateWithTwitch();
-  win = new BrowserWindow({
+
+  streamInWin = new BrowserWindow({
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     width: 1920,
     height: 1080,
-    fullscreen: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      //offscreen: true,
+      //preload: path.join(__dirname, 'preload.js'),
+      offscreen: true,
       nodeIntegration: true
     }
-  })
-
-  win.loadFile('index.html')
-  //win.setIgnoreMouseEvents(true, { forward: true });
-  //win.openDevTools(); //fyi: dev tools allow it to resist closing
-  win.webContents.on('paint', (event, dirty, image) => {
-    fs.writeFileSync('ex.png', image.toPNG())
   });
-  win.webContents.setFrameRate(60);
+  theaterWin = new BrowserWindow({
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    width: 1920,
+    height: 1080,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true
+    }
+  });
 
-  setInterval(() => {
-    let toSend = ""+(Math.random());
-    console.log("imma send", toSend);
-    win.webContents.send("img", toSend);
-  }, 1000)
+  streamInWin.loadFile('streamview.html');
+  streamInWin.webContents.setFrameRate(10);
+
+  theaterWin.loadFile('theater.html');
+  //theaterWin.setIgnoreMouseEvents(true, { forward: true });
+  theaterWin.webContents.once('dom-ready', () => {
+    //TODO: speed
+    let frameNum = 0;
+    streamInWin.webContents.on('paint', (event, dirty, image) => {
+      theaterWin.webContents.send("frame", {
+        image:image.toDataURL(),
+        frameNum: frameNum
+      });
+      frameNum++;
+    });
+  });
+  //theaterWin.openDevTools();
 }
 
 app.whenReady().then(() => {
