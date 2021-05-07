@@ -13,3 +13,7 @@ div{
 	bottom: 3em;
 	right: 1em;
 }
+#receiver{
+	width: 100vw;
+	height: 100vh;
+}

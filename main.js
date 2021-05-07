@@ -95,8 +95,7 @@ function createWindow () {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    width: 1920,
-    height: 1080,
+    fullscreen: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true
