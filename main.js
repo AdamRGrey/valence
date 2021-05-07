@@ -1,6 +1,7 @@
 const { app, BrowserWindow, session  } = require('electron')
 const { ipcMain } = require('electron')
 const path = require('path')
+const sharp = require('sharp');
 
 app.disableHardwareAcceleration();
 let streamInWin;
@@ -56,9 +57,8 @@ function createWindow () {
   sessionCooperateWithTwitch();
 
   streamInWin = new BrowserWindow({
-    frame: false,
     transparent: true,
-    alwaysOnTop: true,
+    show: false,
     width: 1920,
     height: 1080,
     webPreferences: {
@@ -88,12 +88,30 @@ function createWindow () {
     //TODO: speed
     let frameNum = 0;
     streamInWin.webContents.on('paint', (event, dirty, image) => {
-      theaterWin.webContents.send("frame", {
-        image:image.toDataURL(),
-        frameNum: frameNum
+      sharp(image.toPNG())
+        .negate()
+        .extractChannel('green')
+        .ensureAlpha(1)
+        .raw().toBuffer().then((buffer) => {
+          for(var i = 1; i < buffer.length; i+= 4){
+            if(buffer[i] > 64){
+              buffer[i + 2] = 0;
+            }
+          }
+          sharp(buffer, {raw: {
+            width: 1920, height: 1080, channels: 4
+          }})
+            .png()
+            .toBuffer().then(data => {
+              theaterWin.webContents.send("frame", {
+                image: `data:image/png;base64,${data.toString('base64')}`,
+                frameNum: frameNum
+              });
+              frameNum++;
+              //console.log(`data:image/png;base64,${data.toString('base64')}`);
+            });
+        }); 
       });
-      frameNum++;
-    });
   });
   //theaterWin.openDevTools();
 }
@@ -123,5 +141,5 @@ ipcMain.on('perform-action', (event, arg) => {
   }
 })
 ipcMain.on('set-ignore-mouse-events', (event, ...args) => {
-  BrowserWindow.fromWebContents(event.sender).setIgnoreMouseEvents(...args)
+  //BrowserWindow.fromWebContents(event.sender).setIgnoreMouseEvents(...args)
 });
