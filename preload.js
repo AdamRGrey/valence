@@ -14,7 +14,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
   receiver = document.querySelector("#receiver");
-  receiver.textContent = "acquired";
   let currFrame = -1;
   ipcRenderer.on("frame", (event, arg) => {
     if(arg.frameNum > currFrame){
