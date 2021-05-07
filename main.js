@@ -6,7 +6,31 @@ const sharp = require('sharp');
 app.disableHardwareAcceleration();
 let streamInWin;
 let theaterWin;
-
+let frameNum = 0;
+let paintFunc = (event, dirty, image) => {
+  //TODO: speed
+  sharp(image.toPNG())
+    .ensureAlpha(1)
+    .raw().toBuffer().then((buffer) => {
+      for(var i = 1; i < buffer.length; i+= 4){
+        if(buffer[i] > 64){
+          buffer[i + 2] = 0;
+        }
+      }
+      sharp(buffer, {raw: {
+        width: 1920, height: 1080, channels: 4
+      }})
+        .png()
+        .toBuffer().then(data => {
+          theaterWin.webContents.send("frame", {
+            image: `data:image/png;base64,${data.toString('base64')}`,
+            frameNum: frameNum
+          });
+          frameNum++;
+          //console.log(`data:image/png;base64,${data.toString('base64')}`);
+        });
+    }); 
+  }
 function sessionCooperateWithTwitch(){
 
   session.defaultSession.webRequest.onBeforeRequest({
@@ -85,33 +109,9 @@ function createWindow () {
   theaterWin.loadFile('theater.html');
   //theaterWin.setIgnoreMouseEvents(true, { forward: true });
   theaterWin.webContents.once('dom-ready', () => {
-    //TODO: speed
-    let frameNum = 0;
-    streamInWin.webContents.on('paint', (event, dirty, image) => {
-      sharp(image.toPNG())
-        .ensureAlpha(1)
-        .raw().toBuffer().then((buffer) => {
-          for(var i = 1; i < buffer.length; i+= 4){
-            if(buffer[i] > 64){
-              buffer[i + 2] = 0;
-            }
-          }
-          sharp(buffer, {raw: {
-            width: 1920, height: 1080, channels: 4
-          }})
-            .png()
-            .toBuffer().then(data => {
-              theaterWin.webContents.send("frame", {
-                image: `data:image/png;base64,${data.toString('base64')}`,
-                frameNum: frameNum
-              });
-              frameNum++;
-              //console.log(`data:image/png;base64,${data.toString('base64')}`);
-            });
-        }); 
-      });
+    streamInWin.webContents.on('paint', paintFunc);
   });
-  streamInWin.openDevTools();
+  //streamInWin.openDevTools();
   //theaterWin.openDevTools();
 }
 
@@ -127,7 +127,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    shutdown();
   }
 })
 
@@ -135,10 +135,14 @@ ipcMain.on('perform-action', (event, arg) => {
   //console.log(arg);
   switch(arg){
     case "close":
-      app.quit();
+      shutdown();
     break;
   }
 })
 ipcMain.on('set-ignore-mouse-events', (event, ...args) => {
   //BrowserWindow.fromWebContents(event.sender).setIgnoreMouseEvents(...args)
 });
+function shutdown(){
+  paintFunc = null;
+  app.quit();
+}
