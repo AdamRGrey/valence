@@ -80,7 +80,7 @@ function createWindow () {
   });
 
   streamInWin.loadFile('streamview.html');
-  streamInWin.webContents.setFrameRate(10);
+  streamInWin.webContents.setFrameRate(30);
 
   theaterWin.loadFile('theater.html');
   //theaterWin.setIgnoreMouseEvents(true, { forward: true });
@@ -89,8 +89,6 @@ function createWindow () {
     let frameNum = 0;
     streamInWin.webContents.on('paint', (event, dirty, image) => {
       sharp(image.toPNG())
-        .negate()
-        .extractChannel('green')
         .ensureAlpha(1)
         .raw().toBuffer().then((buffer) => {
           for(var i = 1; i < buffer.length; i+= 4){
